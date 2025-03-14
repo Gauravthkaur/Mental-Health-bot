@@ -7,7 +7,7 @@ from nltk.corpus import stopwords
 import re
 import logging
 import random
-from chatbot_enhanced import EnhancedChatbot
+from .chatbot_enhanced import EnhancedChatbot
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
