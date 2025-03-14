@@ -1,0 +1,387 @@
+/* Add calming gradient background with subtle animation */
+body {
+    background: linear-gradient(-45deg, #e6f3ff, #f0f7ff, #e8f5e9, #f1f8e9);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+}
+
+@keyframes gradientBG {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.chatbot-container {
+    width: 500px;
+    margin: 20px auto;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    height: 600px;
+    position: relative;
+    overflow: visible;
+}
+
+/* Add floating bubbles animation */
+.chatbot-container::before,
+.chatbot-container::after {
+    content: '';
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    animation: float 12s infinite;
+    z-index: -1;
+}
+
+.chatbot-container::before {
+    top: -75px;
+    left: -75px;
+    animation-delay: 0s;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+}
+
+.chatbot-container::after {
+    bottom: -75px;
+    right: -75px;
+    animation-delay: -6s;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.2));
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+    25% {
+        transform: translate(15px, 15px) rotate(5deg);
+    }
+    50% {
+        transform: translate(0, 30px) rotate(0deg);
+    }
+    75% {
+        transform: translate(-15px, 15px) rotate(-5deg);
+    }
+}
+
+.chatbot-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 20px;
+    border-bottom: 2px solid rgba(240, 240, 240, 0.5);
+    position: relative;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    z-index: 1;
+}
+
+.chatbot-header h2 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 32px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(45deg, #2c3e50, #3498db);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: titleFloat 3s ease-in-out infinite;
+}
+
+@keyframes titleFloat {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+.subtitle {
+    color: #7f8c8d;
+    margin: 10px 0 0 0;
+    font-size: 18px;
+    font-style: italic;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.chatbot-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 15px;
+    backdrop-filter: blur(4px);
+}
+
+.message {
+    max-width: 80%;
+    padding: 12px 18px;
+    border-radius: 20px;
+    margin: 5px 0;
+    word-wrap: break-word;
+    animation: messageAppear 0.5s ease-out;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+@keyframes messageAppear {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.user-message {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #007bff, #00bcd4);
+    color: white;
+    border-bottom-right-radius: 5px;
+}
+
+.bot-message {
+    align-self: flex-start;
+    background: rgba(255, 255, 255, 0.9);
+    color: #2c3e50;
+    border-bottom-left-radius: 5px;
+}
+
+.message-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.mood-emoji {
+    font-size: 28px;
+    animation: gentleBounce 2s infinite;
+}
+
+@keyframes gentleBounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-3px);
+    }
+}
+
+.message-text {
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+.loading-animation {
+    display: inline-block;
+    margin-right: 8px;
+    font-size: 20px;
+    color: #007bff;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.5;
+    }
+}
+
+.message-categories {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.category-tag {
+    background: rgba(232, 244, 248, 0.8);
+    color: #2c3e50;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    backdrop-filter: blur(4px);
+}
+
+.error-message {
+    background: rgba(255, 235, 238, 0.9);
+    color: #c62828;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 12px;
+    font-size: 14px;
+    text-align: center;
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.chatbot-input {
+    display: flex;
+    gap: 12px;
+    padding-top: 20px;
+    border-top: 2px solid rgba(240, 240, 240, 0.5);
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(4px);
+    border-radius: 0 0 20px 20px;
+    margin: 0 -20px -20px -20px;
+    padding: 20px;
+}
+
+.message-input {
+    flex: 1;
+    padding: 14px 20px;
+    border: 2px solid rgba(0, 123, 255, 0.2);
+    border-radius: 25px;
+    outline: none;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.message-input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.message-input:disabled {
+    background: rgba(245, 245, 245, 0.9);
+    cursor: not-allowed;
+}
+
+.send-button {
+    padding: 14px 30px;
+    background: linear-gradient(135deg, #007bff, #00bcd4);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.send-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.send-button:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Music player styles */
+.music-player {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 10px;
+    border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 1000;
+}
+
+.music-player button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    color: #007bff;
+    padding: 5px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.music-player button:hover {
+    background: rgba(0, 123, 255, 0.1);
+    transform: scale(1.1);
+}
+
+/* Scrollbar styling */
+.chatbot-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chatbot-messages::-webkit-scrollbar-track {
+    background: rgba(241, 241, 241, 0.5);
+    border-radius: 3px;
+}
+
+.chatbot-messages::-webkit-scrollbar-thumb {
+    background: rgba(136, 136, 136, 0.5);
+    border-radius: 3px;
+}
+
+.chatbot-messages::-webkit-scrollbar-thumb:hover {
+    background: rgba(85, 85, 85, 0.5);
+}
+
+/* Add more floating elements */
+.chatbot-container::before {
+    content: '🌟';
+    position: absolute;
+    top: -30px;
+    left: -30px;
+    font-size: 40px;
+    animation: starFloat 8s infinite;
+    opacity: 0.6;
+}
+
+.chatbot-container::after {
+    content: '✨';
+    position: absolute;
+    bottom: -30px;
+    right: -30px;
+    font-size: 40px;
+    animation: starFloat 8s infinite reverse;
+    opacity: 0.6;
+}
+
+@keyframes starFloat {
+    0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+    25% {
+        transform: translate(10px, 10px) rotate(90deg);
+    }
+    50% {
+        transform: translate(0, 20px) rotate(180deg);
+    }
+    75% {
+        transform: translate(-10px, 10px) rotate(270deg);
+    }
+} 
