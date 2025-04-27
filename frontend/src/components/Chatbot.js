@@ -235,7 +235,7 @@ const Chatbot = () => {
 
     // Add API key configuration - store this in environment variables in production!
     // const AIML_API_KEY = process.env.REACT_APP_AIML_API_KEY;
-    const AIML_API_KEY = "25b62cc09a4f4207b5dcbf041e206d00"; // Your hardcoded key
+    const AIML_API_KEY = process.env.REACT_APP_AIML_API_KEY;
 
     // Update user profile based on message content
     const updateUserProfile = (message, mood) => {
