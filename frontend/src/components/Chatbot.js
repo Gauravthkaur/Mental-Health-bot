@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
-import axios from "axios";
 import "./Chatbot.css";
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:5000';
+// Initialize Putter.js client
+const putter = window.puter;
 
 const Chatbot = () => {
     const [messages, setMessages] = useState([]);
-    const [input, setInput] = useState("");
+    const [inputMessage, setInputMessage] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [loadingFrame, setLoadingFrame] = useState(0);
@@ -21,7 +21,7 @@ const Chatbot = () => {
     const calmingTracks = [
         {
             title: "Peaceful Meditation",
-            url: "https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c8a73467.mp3?filename=peaceful-meditation-amp-ambient-119180.mp3"
+            url: "https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c8a73467.mp3?filename=soft-piano-music-312509.mp3"
         },
         {
             title: "Gentle Rain",
@@ -38,7 +38,7 @@ const Chatbot = () => {
         if (isLoading) {
             interval = setInterval(() => {
                 setLoadingFrame((prev) => (prev + 1) % loadingFrames.length);
-            }, 100);
+            }, 200);
         }
         return () => clearInterval(interval);
     }, [isLoading]);
@@ -80,47 +80,87 @@ const Chatbot = () => {
         }
     };
 
-    const sendMessage = async () => {
-        if (!input.trim()) return;
+    const sendMessage = async (e) => {
+        e.preventDefault();
+        if (!inputMessage.trim() || isLoading) return;
 
-        const userMessage = { sender: "user", text: input };
-        setMessages(prev => [...prev, userMessage]);
-        setInput("");
+        const userMessage = inputMessage.trim();
+        setInputMessage('');
+        setMessages(prev => [...prev, { text: userMessage, sender: 'user' }]);
         setIsLoading(true);
-        setError(null);
 
         try {
-            const response = await axios.post(`${API_URL}/chat`, { message: input });
-            
-            if (response.data.error) {
-                throw new Error(response.data.error);
+            // Check if the message is mental health related
+            const mentalHealthKeywords = [
+                'anxiety', 'depression', 'stress', 'mental', 'therapy', 'counseling',
+                'feel', 'feeling', 'emotion', 'emotional', 'help', 'support', 'cope',
+                'coping', 'overwhelmed', 'sad', 'happy', 'angry', 'frustrated',
+                'lonely', 'sleep', 'insomnia', 'panic', 'worry', 'worried'
+            ];
+
+            const isMentalHealthRelated = mentalHealthKeywords.some(keyword => 
+                userMessage.toLowerCase().includes(keyword)
+            );
+
+            if (!isMentalHealthRelated) {
+                setMessages(prev => [...prev, {
+                    // Updated off-topic message
+                    text: "My focus is on supporting you with mental health and emotional well-being topics. While I appreciate your question, could we perhaps explore something related to feelings, coping strategies, or self-care? I'm here to listen.",
+                    sender: 'bot',
+                    mood: 'Neutral' // Or perhaps 'GentleReminder'?
+                }]);
+                setIsLoading(false);
+                return;
             }
 
-            const botMessage = { 
-                sender: "bot", 
-                text: response.data.response,
-                mood: response.data.mood,
-                categories: response.data.categories
-            };
-            setMessages(prev => [...prev, botMessage]);
+            // Get AI response using Putter.js
+            const response = await window.puter.ai.chat(userMessage);
+
+            // Extract and format the message text from the response object
+            let botMessage;
+
+            if (response && typeof response === 'object') {
+                console.log('AI Response Structure:', response);
+                
+                if (response.content) {
+                    botMessage = response.content;
+                } else if (response.message && typeof response.message === 'string') {
+                    botMessage = response.message;
+                } else if (response.message && response.message.content) {
+                    botMessage = response.message.content;
+                } else {
+                    // Updated formatting error message
+                    botMessage = 'I seem to be having a little trouble putting my thoughts into words right now. Could you perhaps try phrasing that differently?';
+                }
+            } else if (typeof response === 'string') {
+                botMessage = response;
+            } else {
+                // Updated generic error message (alternative)
+                botMessage = 'Oh dear, something unexpected happened on my end. Please give me a moment, and perhaps try your message again?';
+            }
+
+            // Format the message for better readability
+            botMessage = botMessage
+                .replace(/\n/g, '<br>') // Convert newlines to HTML line breaks
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold text
+                .replace(/\*(.*?)\*/g, '<em>$1</em>'); // Italic text
+            
+            // Add bot response to messages
+            setMessages(prev => [...prev, { 
+                text: botMessage, 
+                sender: 'bot',
+                mood: 'Neutral' // You can implement mood detection if needed
+            }]);
         } catch (error) {
-            console.error("Error sending message:", error);
-            setError(error.message || "Failed to send message. Please try again.");
-            const errorMessage = { 
-                sender: "bot", 
-                text: "I apologize, but I'm having trouble processing your message. Could you please try again?",
-                mood: "Neutral"
-            };
-            setMessages(prev => [...prev, errorMessage]);
+            console.error('Error getting AI response:', error);
+            setMessages(prev => [...prev, {
+                // Updated generic error message in catch block
+                text: 'I\'m so sorry, it seems I\'ve encountered a technical hiccup. Please don\'t worry, it\'s not you. Could you try sending your message again in a little bit?',
+                sender: 'bot',
+                mood: 'Apologetic' // Custom mood?
+            }]);
         } finally {
             setIsLoading(false);
-        }
-    };
-
-    const handleKeyPress = (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
         }
     };
 
@@ -129,87 +169,70 @@ const Chatbot = () => {
             case "Happy": return "😊";
             case "Sad": return "😔";
             case "Neutral": return "😐";
+            case "Apologetic": return "😥"; // Example for new mood
+            case "GentleReminder": return " gently nudging "; // Example for new mood
             default: return "💭";
         }
     };
 
     return (
-        <>
-            <div className="chatbot-container">
-                <div className="chatbot-header">
-                    <h2>🧠 Mental Health Chatbot</h2>
-                    <p className="subtitle">I'm here to listen and help</p>
-                </div>
-                
-                <div className="chatbot-messages">
-                    {messages.map((msg, index) => (
-                        <div 
-                            key={index} 
-                            className={`message ${msg.sender === "user" ? "user-message" : "bot-message"}`}
-                        >
-                            <div className="message-content">
-                                {msg.sender === "bot" && (
-                                    <span className="mood-emoji">{getMoodEmoji(msg.mood)}</span>
-                                )}
-                                <div className="message-text">{msg.text}</div>
-                            </div>
-                            {msg.sender === "bot" && msg.categories && msg.categories.length > 0 && (
-                                <div className="message-categories">
-                                    {msg.categories.map((category, idx) => (
-                                        <span key={idx} className="category-tag">{category}</span>
-                                    ))}
-                                </div>
+        <div className="chatbot-container">
+            <div className="chatbot-header">
+                <h1>Mental Health Chatbot</h1>
+                <p>Your supportive AI companion</p>
+            </div>
+            
+            <div className="messages-container">
+                {messages.map((message, index) => (
+                    <div key={index} className={`message ${message.sender}`}>
+                        <div className="message-content">
+                            {message.sender === 'bot' && (
+                                <span className="mood-emoji">{getMoodEmoji(message.mood)}</span>
                             )}
+                            <p dangerouslySetInnerHTML={{ __html: message.text }}></p>
                         </div>
-                    ))}
-                    {isLoading && (
-                        <div className="message bot-message">
-                            <div className="message-content">
-                                <span className="mood-emoji">💭</span>
-                                <div className="message-text">
-                                    <span className="loading-animation">{loadingFrames[loadingFrame]}</span> Thinking...
-                                </div>
+                    </div>
+                ))}
+                {isLoading && (
+                    <div className="message bot">
+                        <div className="message-content">
+                            <span className="mood-emoji">🤔</span>
+                            <div className="loading-animation">
+                                {loadingFrames[loadingFrame]}
                             </div>
                         </div>
-                    )}
-                    <div ref={messagesEndRef} />
-                </div>
-
-                {error && (
-                    <div className="error-message">
-                        {error}
                     </div>
                 )}
-
-                <div className="chatbot-input">
-                    <input
-                        type="text"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        placeholder="Type your message here..."
-                        className="message-input"
-                        disabled={isLoading}
-                    />
-                    <button 
-                        onClick={sendMessage} 
-                        className="send-button"
-                        disabled={isLoading}
-                    >
-                        {isLoading ? "Sending..." : "Send"}
-                    </button>
-                </div>
+                <div ref={messagesEndRef} />
             </div>
 
-            <div className="music-player">
-                <button onClick={previousTrack} title="Previous Track">⏮️</button>
-                <button onClick={toggleMusic} title={isMusicPlaying ? "Pause Music" : "Play Music"}>
-                    {isMusicPlaying ? "⏸️" : "▶️"}
+            {error && (
+                <div className="error-message">
+                    {error}
+                </div>
+            )}
+
+            <form onSubmit={sendMessage} className="input-form">
+                <input
+                    type="text"
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    placeholder="Type your message..."
+                    disabled={isLoading}
+                    className="message-input"
+                />
+                <button id="send-button" type="submit" disabled={isLoading} >
+                    Send
                 </button>
-                <button onClick={nextTrack} title="Next Track">⏭️</button>
-                <span style={{ marginLeft: '10px', fontSize: '14px', color: '#2c3e50' }}>
-                    {calmingTracks[currentTrack].title}
-                </span>
+            </form>
+
+            <div className="music-player">
+                <button onClick={previousTrack}>⏮️</button>
+                <button onClick={toggleMusic}>
+                    {isMusicPlaying ? '⏸️' : '▶️'}
+                </button>
+                <button onClick={nextTrack}>⏭️</button>
+                <span className="track-title">{calmingTracks[currentTrack].title}</span>
             </div>
 
             <audio
@@ -218,7 +241,7 @@ const Chatbot = () => {
                 loop
                 onEnded={nextTrack}
             />
-        </>
+        </div>
     );
 };
 
