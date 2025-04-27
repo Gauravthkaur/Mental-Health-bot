@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { Analytics } from "@vercel/analytics/react" // Keep this import
 import "./Chatbot.css";
 
 // Initialize Putter.js client
@@ -177,6 +178,7 @@ const Chatbot = () => {
 
     return (
         <div className="chatbot-container">
+            <Analytics /> {/* Add the Vercel Analytics component here */}
             <div className="chatbot-header">
                 <h1>Mental Health Chatbot</h1>
                 <p>Your supportive AI companion</p>
