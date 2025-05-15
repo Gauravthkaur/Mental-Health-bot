@@ -21,6 +21,9 @@ const Chatbot = () => {
     const audioRef = useRef(null);
     const abortControllerRef = useRef(null);
 
+    // Define how many of the last N messages to use for context
+    const CONTEXT_MESSAGE_COUNT = 6; // e.g., 3 user messages and 3 bot responses
+
     const loadingFrames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
     // Calming background music tracks
@@ -278,24 +281,26 @@ const Chatbot = () => {
     
             // Format a rich system prompt for mental health context
             const relevantInfo = getRelevantInfo(message);
-            const systemPrompt = `You are a mental health support assistant with a ${botPersona} persona.
+            const systemPrompt = `You are a friendly mental health support assistant with a ${botPersona} persona. Your goal is to listen, understand, and provide supportive suggestions and tips.
     
-            The user's current mood appears to be: ${userMood}
-            Their conversation history shows interest in: ${userProfile.topics.join(', ') || 'general mental health'}
-            ${userProfile.name ? `Their name is ${userProfile.name}.` : ''}
+            The user's current mood appears to be: ${userMood}.
+            Their conversation history shows interest in: ${userProfile.topics.join(', ') || 'general mental health'}.
+            ${userProfile.name ? `Their name is ${userProfile.name}. Address them by their name if appropriate and natural.` : ''}
     
-            ${relevantInfo ? "Relevant background information: " + relevantInfo.join(" ") : ""}
+            ${relevantInfo ? "Relevant background information for the current query: " + relevantInfo.join(" ") : ""}
     
-            Please respond in a ${getToneForMood(userMood)} tone.
+            Please respond in a ${getToneForMood(userMood)} and friendly tone.
+            Analyze the user's input and the ongoing conversation to offer relevant mental health tips and suggestions.
     
             Guidelines:
-            - Be empathetic and validate the user's feelings
-            - Provide evidence-based coping strategies when appropriate
-            - Never diagnose or prescribe treatment
-            - If there are signs of crisis, gently suggest professional resources (like mentioning talking to a professional or providing a helpline number if appropriate and safe)
-            - Keep responses conversational and authentic
-            - Use occasional emojis for emotional warmth, but be judicious with serious topics
-            - Tailor your language to a ${botPersona} communication style`;
+            - Be empathetic, understanding, and validate the user's feelings.
+            - Provide evidence-based coping strategies and practical tips when appropriate.
+            - Never diagnose or prescribe treatment.
+            - If there are signs of crisis, gently suggest professional resources (like mentioning talking to a professional or providing a helpline number if appropriate and safe).
+            - Keep responses conversational, friendly, and authentic.
+            - Use occasional emojis for emotional warmth, but be judicious with serious topics.
+            - Tailor your language to a ${botPersona} communication style.
+            - Base your answers on the entire chat context provided.`;
     
             // Check for tool requests first
             const toolRequest = checkForToolRequests(message);
@@ -320,6 +325,14 @@ const Chatbot = () => {
                 return;
             }
     
+            // Prepare message history for the API
+            const apiMessages = [{ "role": "system", "content": systemPrompt }];
+            const recentMessages = messages.slice(-CONTEXT_MESSAGE_COUNT); // Get last N messages
+            recentMessages.forEach(msg => {
+                apiMessages.push({ "role": msg.sender === 'user' ? 'user' : 'assistant', "content": msg.text });
+            });
+            apiMessages.push({ "role": "user", "content": message }); // Add current user message
+    
             // Set up request parameters
             let responseText = '';
             const apiUrl = 'https://api.aimlapi.com/v1/chat/completions'; // Verify this URL is correct
@@ -334,20 +347,11 @@ const Chatbot = () => {
                     },
                     signal: abortControllerRef.current.signal,
                     body: JSON.stringify({
-                        "model": "gpt-3.5-turbo",
-                        "messages": [
-                            {
-                                "role": "system",
-                                "content": systemPrompt
-                            },
-                            {
-                                "role": "user",
-                                "content": message
-                            }
-                        ],
-                        "max_tokens": 1000,
+                        "model": "gpt-3.5-turbo", // Consider using gpt-4 if available and budget allows for better context handling
+                        "messages": apiMessages, // Send the constructed message history
+                        "max_tokens": 1000, // Adjust as needed
                         "stream": true,
-                        "temperature": 0.7 // Slightly reduce randomness
+                        "temperature": 0.75 // Slightly increased for more natural, friendly variance
                     })
                 });
     
@@ -413,19 +417,10 @@ const Chatbot = () => {
                     signal: abortControllerRef.current ? abortControllerRef.current.signal : null,
                     body: JSON.stringify({
                         "model": "gpt-3.5-turbo",
-                        "messages": [
-                            {
-                                "role": "system",
-                                "content": systemPrompt
-                            },
-                            {
-                                "role": "user",
-                                "content": message
-                            }
-                        ],
+                        "messages": apiMessages, // Send the constructed message history
                         "max_tokens": 1000,
                         "stream": false,
-                        "temperature": 0.7
+                        "temperature": 0.75 // Slightly increased for more natural, friendly variance
                     })
                 });
                 
@@ -559,39 +554,65 @@ const Chatbot = () => {
         
         // Add mood-appropriate emoji (consider context sensitivity)
         let emoji = "";
+        // Add friendly greeting/phrasing
+        const friendlyOpeners = [
+            "I understand. ", "Thanks for sharing. ", "I hear you. ", "Okay, let's talk about that. "
+        ];
+        const supportiveClosers = [
+            "How does that sound?", "Is there anything else I can help with on this?", "Remember I'm here if you want to talk more."
+        ];
+
         switch (userMood) {
-            case "Sad": emoji = "😔"; break;
-            case "Angry": emoji = "😌"; break; // Calming emoji for anger
-            case "Happy": emoji = "😊"; break;
-            default: emoji = "💭";
+            case "Sad": 
+                emoji = "😔"; 
+                botMessage = (Math.random() > 0.6 ? "I'm really sorry you're feeling this way. " : "It sounds like you're going through a tough time. ") + botMessage;
+                break;
+            case "Angry": 
+                emoji = "😌"; // Calming emoji for anger
+                botMessage = (Math.random() > 0.6 ? "It's understandable to feel angry sometimes. " : "Let's try to work through this calmly. ") + botMessage;
+                break;
+            case "Happy": 
+                emoji = "😊"; 
+                botMessage = (Math.random() > 0.6 ? "That's great to hear! " : "I'm glad you're feeling positive. ") + botMessage;
+                break;
+            default: 
+                emoji = "💬"; // Changed from 💭 to be more engaging
+                if (Math.random() > 0.5) { // Increased chance for friendly opener
+                    botMessage = friendlyOpeners[Math.floor(Math.random() * friendlyOpeners.length)] + botMessage;
+                }
         }
     
         // Add persona-appropriate language (subtly)
         let personalTouch = "";
         switch (botPersona) {
             case "Supportive": 
-                personalTouch = Math.random() > 0.7 ? "I'm here for you. " : "You're not alone in this. ";
+                personalTouch = Math.random() > 0.6 ? "I'm here for you. " : "You're not alone in this. ";
                 break;
             case "Calm": 
-                personalTouch = Math.random() > 0.7 ? "Take a deep breath. " : "Let's approach this mindfully. ";
+                personalTouch = Math.random() > 0.6 ? "Take a gentle breath. " : "Let's approach this mindfully. ";
                 break;
             case "Cheerful": 
-                personalTouch = Math.random() > 0.7 ? "You've got this! " : "Looking on the bright side, ";
+                personalTouch = Math.random() > 0.6 ? "You've got this! " : "Looking on the bright side, ";
                 break;
             case "Practical": 
-                personalTouch = Math.random() > 0.7 ? "Let's focus on solutions. " : "Here's what might help: ";
+                personalTouch = Math.random() > 0.6 ? "Let's focus on what we can do. " : "Here's a thought: ";
                 break;
             default:
                 personalTouch = "";
         }
     
         // Only add personal touches occasionally and for appropriate moods
-        if (Math.random() > 0.6 && userMood !== "Angry") {
+        if (Math.random() > 0.5 && userMood !== "Angry") { // Increased chance for personal touch
             botMessage = personalTouch + botMessage;
         }
+
+        // Add a supportive closing phrase occasionally
+        if (Math.random() > 0.7 && !botMessage.endsWith("?") && !botMessage.endsWith("!") && !botMessage.endsWith(".")) { // Avoid adding if already ends with punctuation
+             botMessage = botMessage.trim() + " " + supportiveClosers[Math.floor(Math.random() * supportiveClosers.length)];
+        }
     
-        // Add emoji occasionally
-        if (Math.random() > 0.7) {
+        // Add emoji occasionally, ensure it's not duplicative if already added
+        if (Math.random() > 0.6 && emoji && !botMessage.includes(emoji)) { // Ensure emoji is defined
             botMessage = botMessage + " " + emoji;
         }
     
