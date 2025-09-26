@@ -571,17 +571,50 @@ Guidelines:
       components={{
         a: ({ node, ...props }) => (
           <a {...props} target="_blank" rel="noopener noreferrer" 
-             style={{ color: message.sender === 'bot' ? '#0084ff' : '#fff', textDecoration: 'underline' }} />
+             style={{ 
+               color: message.sender === 'bot' ? '#0084ff' : '#fff', 
+               textDecoration: 'underline',
+               wordBreak: 'break-word' 
+             }} />
         ),
-        p: ({ node, ...props }) => <span {...props} />,
-        ul: ({ node, ...props }) => <ul style={{ margin: '8px 0 8px 20px' }} {...props} />,
-        ol: ({ node, ...props }) => <ol style={{ margin: '8px 0 8px 20px' }} {...props} />,
-        li: ({ node, ...props }) => <li style={{ marginBottom: '4px' }} {...props} />,
+        p: ({ node, ...props }) => (
+          <span {...props} style={{ 
+            wordBreak: 'break-word',
+            whiteSpace: 'pre-wrap',
+            overflow: 'hidden'
+          }} />
+        ),
+        ul: ({ node, ...props }) => (
+          <ul style={{ 
+            margin: '8px 0 8px 20px',
+            width: '100%',
+            boxSizing: 'border-box'
+          }} {...props} />
+        ),
+        ol: ({ node, ...props }) => (
+          <ol style={{ 
+            margin: '8px 0 8px 20px',
+            width: '100%',
+            boxSizing: 'border-box'
+          }} {...props} />
+        ),
+        li: ({ node, ...props }) => (
+          <li style={{ 
+            marginBottom: '4px',
+            wordBreak: 'break-word'
+          }} {...props} />
+        ),
         strong: ({ node, ...props }) => (
-          <strong style={{ color: message.sender === 'bot' ? '#a777e3' : '#fff' }} {...props} />
+          <strong style={{ 
+            color: message.sender === 'bot' ? '#a777e3' : '#fff',
+            wordBreak: 'break-word'
+          }} {...props} />
         ),
         em: ({ node, ...props }) => (
-          <em style={{ color: message.sender === 'bot' ? '#6e8efb' : '#fff' }} {...props} />
+          <em style={{ 
+            color: message.sender === 'bot' ? '#6e8efb' : '#fff',
+            wordBreak: 'break-word'
+          }} {...props} />
         )
       }}
     >
@@ -679,7 +712,7 @@ Guidelines:
           padding: '15px',
           overflowY: 'auto',
           maxHeight: 'calc(100vh - 300px)',
-          minHeight: '300px'
+          minHeight: '30px'
         }}>
           {error && (
             <div style={{
@@ -740,6 +773,7 @@ Guidelines:
             >
               <div style={{
                 maxWidth: '70%',
+                width: 'fit-content',
                 padding: '12px 16px',
                 borderRadius: message.sender === 'user' ? '20px 20px 5px 20px' : '20px 20px 20px 5px',
                 background: message.sender === 'user' 
@@ -747,7 +781,10 @@ Guidelines:
                   : 'white',
                 color: message.sender === 'user' ? 'white' : '#333',
                 boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-                border: message.sender === 'bot' ? '1px solid #eee' : 'none'
+                border: message.sender === 'bot' ? '1px solid #eee' : 'none',
+                overflowWrap: 'break-word',
+                wordBreak: 'break-word',
+                hyphens: 'auto'
               }}>
                 {message.sender === 'bot' && (
                   <span style={{ marginRight: '8px', fontSize: '1.2em' }}>
@@ -856,7 +893,7 @@ Guidelines:
             placeholder="Type your message here..."
             disabled={isLoading}
             style={{
-              flex: '1 1 200px',
+              flex: '1 1 50px',
               padding: '12px 16px',
               border: '1px solid #ddd',
               borderRadius: '25px',
